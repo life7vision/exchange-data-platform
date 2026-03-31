@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"os"
+	"regexp"
+	"strings"
 	"sync"
 	"time"
 
@@ -29,14 +32,47 @@ func NewController(cfg modelconfig.AppConfig, svc publish.Service, healthState *
 	return &Controller{cfg: cfg, svc: svc, healthState: healthState}
 }
 
+var safeNameRegex = regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
+
 func (c *Controller) RunOnceHandler(w http.ResponseWriter, r *http.Request) {
+	// Security: Require WORKER_API_TOKEN if set
+	if token := os.Getenv("WORKER_API_TOKEN"); token != "" {
+		auth := r.Header.Get("Authorization")
+		if auth == "" || !strings.HasPrefix(auth, "Bearer ") || strings.TrimPrefix(auth, "Bearer ") != token {
+			w.WriteHeader(http.StatusUnauthorized)
+			_ = json.NewEncoder(w).Encode(map[string]any{"error": "unauthorized"})
+			return
+		}
+	}
+
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
 
 	var req RunRequest
-	_ = json.NewDecoder(r.Body).Decode(&req)
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]any{"error": "invalid request body"})
+		return
+	}
+
+	// Security: validate that requested datasets and markets are safe (alphanumeric and underscores)
+	// This prevents path traversal vulnerabilities in the storage layer.
+	for _, ds := range req.Datasets {
+		if !safeNameRegex.MatchString(ds) {
+			w.WriteHeader(http.StatusBadRequest)
+			_ = json.NewEncoder(w).Encode(map[string]any{"error": "invalid dataset name", "dataset": ds})
+			return
+		}
+	}
+	for _, m := range req.Markets {
+		if !safeNameRegex.MatchString(m) {
+			w.WriteHeader(http.StatusBadRequest)
+			_ = json.NewEncoder(w).Encode(map[string]any{"error": "invalid market name", "market": m})
+			return
+		}
+	}
 
 	c.mu.Lock()
 	if c.running {
