@@ -1,0 +1,3 @@
+## 2025-05-15 - Optimizing Parquet Writer Performance
+**Learning:** In high-throughput data pipelines, redundant `file.Sync()` calls can be a major bottleneck. Removing them can lead to significant performance gains (~35% in this case) at the cost of immediate disk-level durability. Additionally, using index-based assignment for slices is slightly more efficient than `append` even when capacity is pre-allocated.
+**Action:** Always check for redundant synchronization calls in performance-critical write paths. Use index-based assignment for slices when the size is known beforehand for maximum efficiency.
