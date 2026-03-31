@@ -1,0 +1,26 @@
+exchange: binance_tr
+region: tr
+environment: prod
+base_url: https://trbinance.com
+websocket_url: wss://stream-cloud.trbinance.com/ws
+lake_root: ./lake
+temp_root: ./lake/tmp
+poll_interval: 1m
+http_timeout: 15s
+max_batch_size: 100
+datasets:
+  - instruments
+  - tickers
+  - trades
+  - klines
+markets:
+  - spot
+worker_mode: loop
+enable_cleanup: true
+schema_version: v1
+producer_version: 0.1.0
+default_symbols:
+  - BTCTRY
+max_retries: 3
+retry_backoff: 2s
+health_max_age: 5m

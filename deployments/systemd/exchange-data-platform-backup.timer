@@ -1,0 +1,10 @@
+[Unit]
+Description=Nightly lake backup for Exchange Data Platform
+
+[Timer]
+OnCalendar=*-*-* 03:00:00
+Persistent=true
+Unit=exchange-data-platform-backup.service
+
+[Install]
+WantedBy=timers.target

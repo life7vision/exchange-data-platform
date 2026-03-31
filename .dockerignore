@@ -1,0 +1,9 @@
+.git
+.github
+lake
+tests
+docs
+*.log
+tmp
+coverage.out
+dist

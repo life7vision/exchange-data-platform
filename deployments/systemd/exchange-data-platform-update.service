@@ -1,0 +1,15 @@
+[Unit]
+Description=Rebuild and restart Exchange Data Platform
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/exchange-data-platform
+EnvironmentFile=/opt/exchange-data-platform/deployments/docker/.env
+ExecStart=/usr/bin/docker compose -f deployments/docker/compose.yml -f deployments/docker/compose.prod.yml up -d --build --force-recreate
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target

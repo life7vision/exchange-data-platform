@@ -1,0 +1,13 @@
+name: bybit-streaming
+exchange: bybit
+enabled: true
+mode: streaming
+interval: 2m
+datasets:
+  - trades_stream
+  - orderbook_deltas
+  - liquidations_stream
+markets:
+  - spot
+  - linear_perpetual
+worker_url: http://bybit-worker:8081

@@ -1,0 +1,26 @@
+services:
+  scheduler:
+    profiles: []
+    restart: always
+    volumes:
+      - ${LAKE_ROOT:-/opt/exchange-data-platform/lake}:/app/lake
+
+  binance-worker:
+    restart: always
+    volumes:
+      - ${LAKE_ROOT:-/opt/exchange-data-platform/lake}:/app/lake
+
+  bybit-worker:
+    restart: always
+    volumes:
+      - ${LAKE_ROOT:-/opt/exchange-data-platform/lake}:/app/lake
+
+  binance-tr-worker:
+    restart: always
+    volumes:
+      - ${LAKE_ROOT:-/opt/exchange-data-platform/lake}:/app/lake
+
+  bybit-tr-worker:
+    restart: always
+    volumes:
+      - ${LAKE_ROOT:-/opt/exchange-data-platform/lake}:/app/lake

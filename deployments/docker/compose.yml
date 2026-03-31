@@ -1,0 +1,68 @@
+services:
+  scheduler:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile
+    entrypoint: ["/app/scheduler"]
+    restart: unless-stopped
+    profiles: ["ops"]
+
+  binance-worker:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile
+    entrypoint: ["/app/exchange-worker"]
+    command: ["-config", "/app/configs/exchanges/binance.yml", "-health-addr", ":8080"]
+    restart: unless-stopped
+    volumes:
+      - ../../lake:/app/lake
+    healthcheck:
+      test: ["CMD", "/app/health-probe", "-addr", "http://127.0.0.1:8080/livez"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  bybit-worker:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile
+    entrypoint: ["/app/exchange-worker"]
+    command: ["-config", "/app/configs/exchanges/bybit.yml", "-health-addr", ":8081"]
+    restart: unless-stopped
+    volumes:
+      - ../../lake:/app/lake
+    healthcheck:
+      test: ["CMD", "/app/health-probe", "-addr", "http://127.0.0.1:8081/livez"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  binance-tr-worker:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile
+    entrypoint: ["/app/exchange-worker"]
+    command: ["-config", "/app/configs/exchanges/binance_tr.yml", "-health-addr", ":8082"]
+    restart: unless-stopped
+    volumes:
+      - ../../lake:/app/lake
+    healthcheck:
+      test: ["CMD", "/app/health-probe", "-addr", "http://127.0.0.1:8082/livez"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  bybit-tr-worker:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile
+    entrypoint: ["/app/exchange-worker"]
+    command: ["-config", "/app/configs/exchanges/bybit_tr.yml", "-health-addr", ":8083"]
+    restart: unless-stopped
+    volumes:
+      - ../../lake:/app/lake
+    healthcheck:
+      test: ["CMD", "/app/health-probe", "-addr", "http://127.0.0.1:8083/livez"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

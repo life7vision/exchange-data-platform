@@ -1,0 +1,10 @@
+[Unit]
+Description=Nightly retention purge for Exchange Data Platform
+
+[Timer]
+OnCalendar=*-*-* 04:15:00
+Persistent=true
+Unit=exchange-data-platform-retention.service
+
+[Install]
+WantedBy=timers.target

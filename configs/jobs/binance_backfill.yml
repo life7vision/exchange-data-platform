@@ -1,0 +1,14 @@
+name: binance-backfill
+exchange: binance
+enabled: true
+mode: backfill
+interval: 1m
+datasets:
+  - instruments
+  - tickers
+  - trades
+  - klines
+markets:
+  - spot
+  - linear_perpetual
+worker_url: http://binance-worker:8080

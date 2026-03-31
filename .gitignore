@@ -1,0 +1,17 @@
+.DS_Store
+.env
+.env.*
+!.env.example
+
+deployments/docker/.env
+deployments/docker/secrets.env
+deployments/docker/env/*
+!deployments/docker/env/.gitkeep
+
+lake/*
+!lake/.gitkeep
+
+tmp/
+dist/
+coverage.out
+*.log

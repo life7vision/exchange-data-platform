@@ -1,0 +1,13 @@
+name: binance-streaming
+exchange: binance
+enabled: true
+mode: streaming
+interval: 2m
+datasets:
+  - trades_stream
+  - orderbook_deltas
+  - liquidations_stream
+markets:
+  - spot
+  - linear_perpetual
+worker_url: http://binance-worker:8080

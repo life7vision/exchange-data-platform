@@ -1,0 +1,12 @@
+[Unit]
+Description=Exchange Data Platform retention purge
+After=exchange-data-platform.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/exchange-data-platform
+EnvironmentFile=/opt/exchange-data-platform/deployments/docker/.env
+ExecStart=/usr/bin/bash /opt/exchange-data-platform/scripts/retention/purge_old_data.sh
+
+[Install]
+WantedBy=multi-user.target

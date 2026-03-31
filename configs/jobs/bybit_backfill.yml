@@ -1,0 +1,15 @@
+name: bybit-backfill
+exchange: bybit
+enabled: true
+mode: backfill
+interval: 1m
+datasets:
+  - instruments
+  - tickers
+  - trades
+  - klines
+  - funding_rates
+markets:
+  - spot
+  - linear_perpetual
+worker_url: http://bybit-worker:8081
