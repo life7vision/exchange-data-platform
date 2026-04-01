@@ -37,3 +37,17 @@ func TestIsBinanceLiquidationMessage(t *testing.T) {
 		t.Fatalf("expected liquidation message to pass")
 	}
 }
+
+func BenchmarkIsBinanceTradeStreamMessage(b *testing.B) {
+	msg := map[string]any{"e": "trade", "t": 1, "p": "68000.1", "q": "0.01"}
+	for i := 0; i < b.N; i++ {
+		isBinanceTradeStreamMessage(msg)
+	}
+}
+
+func BenchmarkIsBinanceOrderbookDeltaMessage(b *testing.B) {
+	msg := map[string]any{"U": 10, "u": 11, "b": []any{}, "a": []any{}}
+	for i := 0; i < b.N; i++ {
+		isBinanceOrderbookDeltaMessage(msg)
+	}
+}

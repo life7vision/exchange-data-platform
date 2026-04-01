@@ -3,6 +3,7 @@ package publish
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"time"
 
 	"exchange-data-platform/internal/connector/api"
@@ -28,9 +29,17 @@ type Service struct {
 	RejectStore     rejects.Store
 }
 
+var pathRegex = regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
+
 func (s Service) RunOnce(ctx context.Context) error {
 	for _, market := range s.Config.Markets {
+		if !pathRegex.MatchString(market) {
+			return fmt.Errorf("invalid market name: %s", market)
+		}
 		for _, dataset := range s.Config.Datasets {
+			if !pathRegex.MatchString(dataset) {
+				return fmt.Errorf("invalid dataset name: %s", dataset)
+			}
 			jobID := fmt.Sprintf("%s-%s-%d", s.Config.Exchange, dataset, time.Now().UTC().UnixNano())
 			rows, err := s.Connector.Fetch(ctx, api.FetchRequest{
 				Dataset: dataset,

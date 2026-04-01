@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -13,6 +14,7 @@ import (
 	"exchange-data-platform/internal/connector/api"
 	modelconfig "exchange-data-platform/internal/model/config"
 	"exchange-data-platform/internal/model/raw"
+	"exchange-data-platform/internal/observability/metrics"
 	"exchange-data-platform/internal/transport/httpclient"
 	wsclient "exchange-data-platform/internal/transport/websocket"
 )
@@ -30,6 +32,18 @@ func (c *Connector) Name() string   { return c.cfg.Exchange }
 func (c *Connector) Region() string { return c.cfg.Region }
 
 func (c *Connector) Fetch(ctx context.Context, req api.FetchRequest) ([]raw.Envelope, error) {
+	slog.Debug("fetching dataset", "exchange", c.cfg.Exchange, "dataset", req.Dataset, "market", req.Market)
+	rows, err := c.fetch(ctx, req)
+	if err != nil {
+		slog.Error("fetch failed", "exchange", c.cfg.Exchange, "dataset", req.Dataset, "market", req.Market, "err", err)
+		metrics.IncExchangeError(c.cfg.Exchange)
+		return nil, err
+	}
+	slog.Info("fetch successful", "exchange", c.cfg.Exchange, "dataset", req.Dataset, "market", req.Market, "count", len(rows))
+	return rows, nil
+}
+
+func (c *Connector) fetch(ctx context.Context, req api.FetchRequest) ([]raw.Envelope, error) {
 	switch req.Dataset {
 	case "instruments":
 		return c.fetchInstruments(ctx, req)
