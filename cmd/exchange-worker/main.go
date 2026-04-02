@@ -23,6 +23,7 @@ func main() {
 	flag.Parse()
 
 	logging.Setup()
+	metrics.Init()
 
 	cfg, err := loader.Load(*configPath)
 	if err != nil {
@@ -46,7 +47,7 @@ func main() {
 		mux := http.NewServeMux()
 		mux.HandleFunc("/healthz", healthState.Handler)
 		mux.HandleFunc("/livez", health.LiveHandler)
-		mux.HandleFunc("/metrics", metrics.Handler)
+		mux.Handle("/metrics", metrics.Handler())
 		mux.HandleFunc("/run-once", controller.RunOnceHandler)
 		if err := http.ListenAndServe(*addr, mux); err != nil {
 			log.Printf("health server stopped: %v", err)

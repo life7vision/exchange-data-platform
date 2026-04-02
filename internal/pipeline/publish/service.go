@@ -32,6 +32,9 @@ type Service struct {
 var pathRegex = regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
 
 func (s Service) RunOnce(ctx context.Context) error {
+	batchStart := time.Now()
+	processedCount := 0
+	
 	for _, market := range s.Config.Markets {
 		if !pathRegex.MatchString(market) {
 			return fmt.Errorf("invalid market name: %s", market)
@@ -41,14 +44,24 @@ func (s Service) RunOnce(ctx context.Context) error {
 				return fmt.Errorf("invalid dataset name: %s", dataset)
 			}
 			jobID := fmt.Sprintf("%s-%s-%d", s.Config.Exchange, dataset, time.Now().UTC().UnixNano())
+			start := time.Now()
+			
 			rows, err := s.Connector.Fetch(ctx, api.FetchRequest{
 				Dataset: dataset,
 				Market:  market,
 				Limit:   s.Config.MaxBatchSize,
 				JobID:   jobID,
 			})
+			
+			latency := time.Since(start).Milliseconds()
+			if metrics.Global != nil {
+				metrics.Global.RecordAPICall(latency, err != nil)
+			}
+			
 			if err != nil {
-				metrics.IncRejects()
+				if metrics.Global != nil {
+					metrics.Global.RecordReject()
+				}
 				_, _ = s.RejectStore.Write(s.Config.Exchange, dataset, map[string]any{"market": market}, err)
 				continue
 			}
@@ -95,10 +108,25 @@ func (s Service) RunOnce(ctx context.Context) error {
 				if err := s.TempStore.Remove(tempPath); err != nil {
 					return fmt.Errorf("cleanup temp spool: %w", err)
 				}
+				if metrics.Global != nil {
+					metrics.Global.FilesCleaned.Inc()
+				}
 			}
-			metrics.IncBatches()
-			metrics.AddRecords(len(rows))
+			
+			processedCount += len(rows)
+			if metrics.Global != nil {
+				metrics.Global.TempFilesWritten.Inc()
+				metrics.Global.ParquetWritten.Inc()
+				metrics.Global.ManifestWritten.Inc()
+			}
 		}
 	}
+	
+	if processedCount > 0 && metrics.Global != nil {
+		processingTime := time.Since(batchStart).Milliseconds()
+		metrics.Global.RecordBatch(processedCount, processingTime)
+		metrics.Global.UpdateLastSync()
+	}
+	
 	return nil
 }

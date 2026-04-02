@@ -6,6 +6,15 @@ services:
     entrypoint: ["/app/scheduler"]
     restart: unless-stopped
     profiles: ["ops"]
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    env_file:
+      - .env
+    environment:
+      - TZ=UTC
 
   binance-worker:
     build:
@@ -16,11 +25,25 @@ services:
     restart: unless-stopped
     volumes:
       - ../../lake:/app/lake
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    env_file:
+      - .env
+    environment:
+      - TZ=UTC
+      - EXCHANGE=binance
     healthcheck:
       test: ["CMD", "/app/health-probe", "-addr", "http://127.0.0.1:8080/livez"]
       interval: 30s
       timeout: 5s
       retries: 3
+      start_period: 10s
 
   bybit-worker:
     build:
@@ -31,11 +54,25 @@ services:
     restart: unless-stopped
     volumes:
       - ../../lake:/app/lake
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    env_file:
+      - .env
+    environment:
+      - TZ=UTC
+      - EXCHANGE=bybit
     healthcheck:
       test: ["CMD", "/app/health-probe", "-addr", "http://127.0.0.1:8081/livez"]
       interval: 30s
       timeout: 5s
       retries: 3
+      start_period: 10s
 
   binance-tr-worker:
     build:
@@ -46,11 +83,25 @@ services:
     restart: unless-stopped
     volumes:
       - ../../lake:/app/lake
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    env_file:
+      - .env
+    environment:
+      - TZ=UTC
+      - EXCHANGE=binance_tr
     healthcheck:
       test: ["CMD", "/app/health-probe", "-addr", "http://127.0.0.1:8082/livez"]
       interval: 30s
       timeout: 5s
       retries: 3
+      start_period: 10s
 
   bybit-tr-worker:
     build:
@@ -61,8 +112,22 @@ services:
     restart: unless-stopped
     volumes:
       - ../../lake:/app/lake
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    env_file:
+      - .env
+    environment:
+      - TZ=UTC
+      - EXCHANGE=bybit_tr
     healthcheck:
       test: ["CMD", "/app/health-probe", "-addr", "http://127.0.0.1:8083/livez"]
       interval: 30s
       timeout: 5s
       retries: 3
+      start_period: 10s

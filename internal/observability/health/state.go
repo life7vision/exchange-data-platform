@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"sync"
 	"time"
+
+	"exchange-data-platform/internal/observability/metrics"
 )
 
 type Status struct {
@@ -30,6 +32,12 @@ func (s *State) MarkSuccess() {
 	defer s.mu.Unlock()
 	s.status.LastSuccessAt = time.Now().UTC()
 	s.status.LastError = ""
+	
+	// Update Prometheus metrics
+	if metrics.Global != nil {
+		metrics.Global.SetWorkerHealth(s.status.Exchange, true)
+		metrics.Global.UpdateLastSync()
+	}
 }
 
 func (s *State) MarkFailure(err error) {
@@ -39,6 +47,12 @@ func (s *State) MarkFailure(err error) {
 	if err != nil {
 		s.status.LastError = err.Error()
 	}
+	
+	// Update Prometheus metrics
+	if metrics.Global != nil {
+		metrics.Global.SetWorkerHealth(s.status.Exchange, false)
+		metrics.Global.DataErrors.Inc()
+	}
 }
 
 func (s *State) Handler(w http.ResponseWriter, _ *http.Request) {
@@ -46,9 +60,17 @@ func (s *State) Handler(w http.ResponseWriter, _ *http.Request) {
 	defer s.mu.RUnlock()
 
 	code := http.StatusOK
+	healthy := true
 	if s.status.LastSuccessAt.IsZero() || time.Since(s.status.LastSuccessAt) > s.status.MaxAge {
 		code = http.StatusServiceUnavailable
+		healthy = false
 	}
+	
+	// Update Prometheus metrics
+	if metrics.Global != nil {
+		metrics.Global.SetWorkerHealth(s.status.Exchange, healthy)
+	}
+	
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	_ = json.NewEncoder(w).Encode(s.status)
